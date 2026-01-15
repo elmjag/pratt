@@ -2,30 +2,48 @@ use regex::Regex;
 
 static TOK_REGEXP: &str = r"^(?<atom>\d+)|(?<op>(\+|-|\*|/))|(?<ignore>(\s|\n)+)";
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Token<'a> {
-    Atom(&'a str),
-    Op(&'a str),
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Op {
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Token {
+    Atom(i64),
+    Op(Op),
     Eof,
 }
 
 #[derive(Debug)]
-pub struct Lexer<'a> {
-    tokens: Vec<Token<'a>>,
+pub struct Lexer {
+    tokens: Vec<Token>,
 }
 
-fn make_token<'a>(name: &str, value: &'a str) -> Token<'a> {
+fn str_to_op(text: &str) -> Op {
+    match text {
+        "+" => Op::Add,
+        "-" => Op::Sub,
+        "*" => Op::Mul,
+        "/" => Op::Div,
+        _ => panic!("unexpected operation '{}'", text),
+    }
+}
+
+fn make_token(name: &str, value: &str) -> Token {
     match name {
-        "atom" => Token::Atom(value),
-        "op" => Token::Op(value),
+        "atom" => Token::Atom(value.parse().unwrap()),
+        "op" => Token::Op(str_to_op(value)),
         _ => panic!("unexpected token name"),
     }
 }
 
-fn parse<'a>(text: &'a String) -> Vec<Token<'a>> {
+fn parse(text: &String) -> Vec<Token> {
     let re = Regex::new(TOK_REGEXP).unwrap();
 
-    fn next_token<'a>(re: &Regex, remaining: &'a str) -> (Option<Token<'a>>, usize) {
+    fn next_token(re: &Regex, remaining: &str) -> (Option<Token>, usize) {
         let Some(caps) = re.captures(remaining) else {
             panic!("parse error");
         };
@@ -69,18 +87,18 @@ fn parse<'a>(text: &'a String) -> Vec<Token<'a>> {
     tokens
 }
 
-impl<'a> Lexer<'a> {
-    pub fn new(text: &'a String) -> Self {
+impl Lexer {
+    pub fn new(text: &String) -> Self {
         Lexer {
             tokens: parse(text),
         }
     }
 
-    pub fn next(&mut self) -> Token<'a> {
+    pub fn next(&mut self) -> Token {
         self.tokens.pop().unwrap_or(Token::Eof)
     }
 
-    pub fn peek(&mut self) -> Token<'a> {
+    pub fn peek(&mut self) -> Token {
         self.tokens.last().copied().unwrap_or(Token::Eof)
     }
 }

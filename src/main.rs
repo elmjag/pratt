@@ -1,5 +1,9 @@
-mod lex;
-use lex::Lexer;
+mod ast;
+mod lexer;
+mod parser;
+
+use lexer::Lexer;
+use parser::parse;
 use std::env;
 use std::fs;
 
@@ -13,15 +17,8 @@ fn process_file(file_name: &String) {
     };
 
     let mut lex = Lexer::new(&text);
-    loop {
-        let next = lex.next();
-        let peek = lex.peek();
-
-        println!("peek {peek:?} next {next:?}");
-        if next == lex::Token::Eof {
-            break;
-        }
-    }
+    let exp = parse(&mut lex);
+    println!("ast: {exp:?}");
 }
 
 fn main() {
