@@ -40,7 +40,7 @@ fn make_token(name: &str, value: &str) -> Token {
     }
 }
 
-fn parse(text: &String) -> Vec<Token> {
+fn parse(print_tokens: bool, text: &String) -> Vec<Token> {
     let re = Regex::new(TOK_REGEXP).unwrap();
 
     fn next_token(re: &Regex, remaining: &str) -> (Option<Token>, usize) {
@@ -83,14 +83,26 @@ fn parse(text: &String) -> Vec<Token> {
         }
     }
 
+    if print_tokens {
+        print_toks(&tokens);
+    }
+
     tokens.reverse();
     tokens
 }
 
+fn print_toks(tokens: &Vec<Token>) {
+    print!("Tokens: ");
+    for tok in tokens {
+        print!("{:?} ", tok);
+    }
+    println!("{:?}", Token::Eof);
+}
+
 impl Lexer {
-    pub fn new(text: &String) -> Self {
+    pub fn new(print_tokens: bool, text: &String) -> Self {
         Lexer {
-            tokens: parse(text),
+            tokens: parse(print_tokens, text),
         }
     }
 
