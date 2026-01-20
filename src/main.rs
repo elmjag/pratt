@@ -2,6 +2,8 @@ mod ast;
 mod interpreter;
 mod lexer;
 mod parser;
+#[cfg(test)]
+mod test;
 
 use interpreter::eval;
 use lexer::Lexer;
