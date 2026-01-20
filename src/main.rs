@@ -44,12 +44,12 @@ fn process_file(print_tokens: bool, print_ast: bool, file_name: &String) {
 
     let mut lex = Lexer::new(print_tokens, &text);
 
-    let exp = parse(&mut lex);
+    let ast = parse(&mut lex);
     if print_ast {
-        println!("AST: {exp:?}\n");
+        println!("AST: {ast:?}\n");
     }
 
-    let res = eval(exp);
+    let res = eval(ast);
     println!("Result: {res}");
 }
 

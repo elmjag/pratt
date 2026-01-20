@@ -1,6 +1,15 @@
 use regex::Regex;
 
-static TOK_REGEXP: &str = r"^(?<atom>\d+)|(?<op>(\+|-|\*|/))|(?<ignore>(\s|\n)+)";
+static TOK_REGEXP: &str = concat!(
+    r"^(",
+    r"(?<name>[a-z]+)|",
+    r"(?<assign><-)|",
+    r"(?<atom>\d+)|",
+    r"(?<op>(\+|-|\*|/))|",
+    r"(?<eol>\n)|",
+    r"(?<ignore>( )+)",
+    r")"
+);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Op {
@@ -10,10 +19,13 @@ pub enum Op {
     Div,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
+    Name(String),
     Atom(i64),
+    Assign,
     Op(Op),
+    Eol,
     Eof,
 }
 
@@ -34,9 +46,12 @@ fn str_to_op(text: &str) -> Op {
 
 fn make_token(name: &str, value: &str) -> Token {
     match name {
+        "name" => Token::Name(String::from(value)),
         "atom" => Token::Atom(value.parse().unwrap()),
+        "assign" => Token::Assign,
         "op" => Token::Op(str_to_op(value)),
-        _ => panic!("unexpected token name"),
+        "eol" => Token::Eol,
+        _ => panic!("unexpected token name '{name}'"),
     }
 }
 
@@ -106,11 +121,28 @@ impl Lexer {
         }
     }
 
-    pub fn next(&mut self) -> Token {
-        self.tokens.pop().unwrap_or(Token::Eof)
+    fn get_nth(&self, position: usize) -> Token {
+        if position >= self.tokens.len() {
+            return Token::Eof;
+        }
+
+        self.tokens
+            .get(self.tokens.len() - position - 1)
+            .cloned()
+            .unwrap()
     }
 
-    pub fn peek(&mut self) -> Token {
-        self.tokens.last().copied().unwrap_or(Token::Eof)
+    pub fn current(&self) -> Token {
+        self.get_nth(0)
+    }
+
+    pub fn next(&self) -> Token {
+        self.get_nth(1)
+    }
+
+    pub fn eat(&mut self, num_tokens: usize) {
+        for _ in 0..num_tokens {
+            self.tokens.pop();
+        }
     }
 }
